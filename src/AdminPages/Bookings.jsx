@@ -21,32 +21,67 @@ export default function Bookings() {
     fetchBookings();
     fetchUsers();
   }, []);
+  // const handleConfirm = async (id) => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+
+  //     await axios.put(
+  //       `http://127.0.0.1:8000/api/bookings/${id}`,
+  //       { status: "confirmed" },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+
+  //     toast.success("✅ Booking confirmed!");
+  //     fetchBookings();
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error("❌ Failed to confirm booking");
+  //   }
+  // };
+  // Confirm & redirect function
   const handleConfirm = async (id) => {
     try {
-      const token = localStorage.getItem("token"); // লগইন এর সময় সেট করা হয়েছে কিনা দেখো
-
-      await axios.put(
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
         `http://127.0.0.1:8000/api/bookings/${id}`,
         { status: "confirmed" },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
+      toast.success("Booking confirmed!");
 
-      toast.success("✅ Booking confirmed!");
       fetchBookings();
-    } catch (error) {
-      console.error(error);
-      toast.error("❌ Failed to confirm booking");
+
+      const updatedBooking = res.data.data;
+      if (updatedBooking.meeting_link) {
+        window.location.href = updatedBooking.meeting_link;
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to confirm booking");
     }
   };
+  // const fetchBookings = async () => {
+  //   const res = await api.get("/bookings");
+  //   setBookings(res.data);
+  // };
   const fetchBookings = async () => {
-    const res = await api.get("/bookings");
-    setBookings(res.data);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://127.0.0.1:8000/api/bookings", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBookings(res.data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load bookings");
+    }
   };
-
   const fetchUsers = async () => {
     const res = await api.get("/users");
     setUsers(res.data);
@@ -199,6 +234,7 @@ export default function Bookings() {
               <td className="border p-2">{b.user?.name}</td>
               <td className="border p-2">{b.booked_by?.name || "Admin"}</td>
               <td className="border p-2">{b.date}</td>
+
               <td className="border p-2">
                 {b.start_time} - {b.end_time}
               </td>
