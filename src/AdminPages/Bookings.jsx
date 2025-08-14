@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import api from "../api";
-import { toast } from "react-toastify";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function Bookings() {
   const [bookings, setBookings] = useState([]);
@@ -13,78 +12,38 @@ export default function Bookings() {
     end_time: "",
     status: "pending",
     notes: "",
-    meeting_type: "none",
-    meeting_link: "http://localhost:5173/room?roomId=room1",
+    meeting_type: "google",
+    meeting_link: "",
   });
+
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     fetchBookings();
     fetchUsers();
   }, []);
-  // const handleConfirm = async (id) => {
-  //   try {
-  //     const token = localStorage.getItem("token");
 
-  //     await axios.put(
-  //       `http://127.0.0.1:8000/api/bookings/${id}`,
-  //       { status: "confirmed" },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     toast.success("✅ Booking confirmed!");
-  //     fetchBookings();
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error("❌ Failed to confirm booking");
-  //   }
-  // };
-  // Confirm & redirect function
-  const handleConfirm = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.put(
-        `http://127.0.0.1:8000/api/bookings/${id}`,
-        { status: "confirmed" },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      toast.success("Booking confirmed!");
-
-      fetchBookings();
-
-      const updatedBooking = res.data.data;
-      if (updatedBooking.meeting_link) {
-        window.location.href = updatedBooking.meeting_link;
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to confirm booking");
-    }
-  };
-  // const fetchBookings = async () => {
-  //   const res = await api.get("/bookings");
-  //   setBookings(res.data);
-  // };
   const fetchBookings = async () => {
     try {
-      const token = localStorage.getItem("token");
       const res = await axios.get("http://127.0.0.1:8000/api/bookings", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setBookings(res.data);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to fetch bookings:", err);
       toast.error("Failed to load bookings");
     }
   };
+
   const fetchUsers = async () => {
-    const res = await api.get("/users");
-    setUsers(res.data);
+    try {
+      const res = await axios.get("http://127.0.0.1:8000/api/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsers(res.data);
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+    }
   };
 
   const handleChange = (e) => {
@@ -93,51 +52,90 @@ export default function Bookings() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    console.log("Sending form data:", form);
-
     try {
-      await api.post("/bookings", form, { withCredentials: true });
-      alert("Booking created!");
-      fetchBookings();
-      setForm({
-        user_id: "",
-        date: "",
-        start_time: "",
-        end_time: "",
-        status: "pending",
-        notes: "",
-        meeting_type: "none",
-        meeting_link: "http://localhost:5173/room?roomId=room1",
-      });
+      const payload = { ...form, meeting_link: undefined }; // backend will generate Google Meet link
+      const res = await axios.post(
+        "http://127.0.0.1:8000/api/bookings",
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data.booking) {
+        toast.success(
+          `Booking created! Google Meet link: ${
+            res.data.meeting_link ?? "Not created"
+          }`
+        );
+        setForm({
+          user_id: "",
+          date: "",
+          start_time: "",
+          end_time: "",
+          status: "pending",
+          notes: "",
+          meeting_type: "google",
+          meeting_link: "",
+        });
+        fetchBookings();
+      }
     } catch (err) {
-      console.error(err.response?.data);
-      alert("Error: " + JSON.stringify(err.response?.data.errors));
+      console.error("Booking creation failed:", err.response ?? err);
+      toast.error(
+        `Failed to create booking: ${
+          err.response?.data?.error ?? "Check console"
+        }`
+      );
+    }
+  };
+
+  const handleConfirm = async (id) => {
+    try {
+      const res = await axios.put(
+        `http://127.0.0.1:8000/api/bookings/${id}`,
+        { status: "confirmed" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Booking confirmed!");
+      fetchBookings();
+
+      const updatedBooking = res.data.data;
+      if (updatedBooking?.meeting_link) {
+        window.location.href = updatedBooking.meeting_link;
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to confirm booking");
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure to delete this booking?")) {
-      await api.delete(`/bookings/${id}`);
+    if (!window.confirm("Are you sure to delete this booking?")) return;
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/bookings/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("Booking deleted!");
       fetchBookings();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete booking");
     }
   };
 
   return (
     <div className="p-4 bg-white shadow-md rounded-lg">
-      <h1 className="text-4xl mb-4 text-center font-semibold text-emerald-700 ">
+      <h1 className="text-4xl mb-4 text-center font-semibold text-emerald-700">
         Bookings
       </h1>
-      <div className=" text-center justify-center items-center flex ">
-        <form
-          onSubmit={handleSubmit}
-          className="mb-2 grid grid-cols-1 gap-2 text-sm space-y-3 "
-        >
+
+      {/* Booking Form */}
+      <div className="flex justify-center mb-4">
+        <form onSubmit={handleSubmit} className="grid gap-2 w-[400px]">
           <select
             name="meeting_type"
             value={form.meeting_type}
             onChange={handleChange}
-            className="border p-2 rounded w-[400px]"
+            className="border p-2 rounded"
           >
             <option value="none">No Meeting Link</option>
             <option value="zoom">Zoom</option>
@@ -149,8 +147,8 @@ export default function Bookings() {
             name="user_id"
             value={form.user_id}
             onChange={handleChange}
-            className="border p-2 w-[400px]"
             required
+            className="border p-2 rounded"
           >
             <option value="">Select User</option>
             {users.map((u) => (
@@ -159,21 +157,14 @@ export default function Bookings() {
               </option>
             ))}
           </select>
-          <input
-            type="url"
-            name="meeting_link"
-            value={form.meeting_link}
-            onChange={handleChange}
-            placeholder="Meeting Link"
-            className="border p-2 rounded col-span-1 w-[400px]"
-          />
+
           <input
             type="date"
             name="date"
             value={form.date}
             onChange={handleChange}
-            className="border p-2 w-[400px]"
             required
+            className="border p-2 rounded"
           />
 
           <input
@@ -181,8 +172,8 @@ export default function Bookings() {
             name="start_time"
             value={form.start_time}
             onChange={handleChange}
-            className="border p-2 w-[400px]"
             required
+            className="border p-2 rounded"
           />
 
           <input
@@ -190,30 +181,29 @@ export default function Bookings() {
             name="end_time"
             value={form.end_time}
             onChange={handleChange}
-            className="border p-2 w-[400px]"
             required
+            className="border p-2 rounded"
           />
 
           <select
             name="status"
             value={form.status}
             onChange={handleChange}
-            className="border p-2 w-[400px]"
+            className="border p-2 rounded"
           >
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
             <option value="cancelled">Cancelled</option>
           </select>
 
-          <div>
-            <button className="bg-green-600 text-white w-[320px] h-[38px] rounded py-1">
-              Add
-            </button>
-          </div>
+          <button className="bg-green-600 text-white rounded py-2">
+            Add Booking
+          </button>
         </form>
       </div>
 
-      <table className="w-full border border-gray-300 text-sm my-6">
+      {/* Booking Table */}
+      <table className="w-full border border-gray-300 text-sm">
         <thead>
           <tr>
             <th className="border p-1">ID</th>
@@ -234,7 +224,6 @@ export default function Bookings() {
               <td className="border p-2">{b.user?.name}</td>
               <td className="border p-2">{b.booked_by?.name || "Admin"}</td>
               <td className="border p-2">{b.date}</td>
-
               <td className="border p-2">
                 {b.start_time} - {b.end_time}
               </td>
@@ -250,18 +239,16 @@ export default function Bookings() {
                     Join Meeting
                   </a>
                 ) : b.status === "pending" ? (
-                  <span className="text-gray-500">
-                    ⏳ Waiting for confirmation
-                  </span>
+                  <span className="text-gray-500">⏳ Waiting</span>
                 ) : (
-                  <span className="text-red-500">No Meeting Link</span>
+                  <span className="text-red-500">No Link</span>
                 )}
               </td>
               <td className="border p-2">
                 {b.status === "pending" ? (
                   <button
                     onClick={() => handleConfirm(b.id)}
-                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                    className="bg-green-500 text-white px-2 py-1 rounded"
                   >
                     Confirm
                   </button>

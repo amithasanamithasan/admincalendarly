@@ -53,22 +53,25 @@ const Login = () => {
     }
   };
 
-  const createMeeting = async () => {
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/google/meeting",
-        { withCredentials: true }
-      );
-      console.log("Meeting Created:", response.data);
+  // const createMeeting = async () => {
+  //   try {
+  //     const response = await axios.post(
+  //       "http://127.0.0.1:8000/google/meeting",
+  //       { withCredentials: true }
+  //     );
+  //     console.log("Meeting Created:", response.data);
 
-      alert(`Meeting Link: ${response.data.hangoutLink}`);
-      window.open(response.data.hangoutLink, "_blank");
-    } catch (error) {
-      console.error(
-        "Meeting creation error:",
-        error.response?.data || error.message
-      );
-    }
+  //     alert(`Meeting Link: ${response.data.hangoutLink}`);
+  //     window.open(response.data.hangoutLink, "_blank");
+  //   } catch (error) {
+  //     console.error(
+  //       "Meeting creation error:",
+  //       error.response?.data || error.message
+  //     );
+  //   }
+  // };
+  const handleGoogleLogin = () => {
+    window.location.href = "http://127.0.0.1:8000/oauth/google/redirect";
   };
   return (
     <div className="min-h-screen bg-gradient-to-r from-cyan-100 to-purple-100 flex items-center justify-center p-6 ">
@@ -118,11 +121,8 @@ const Login = () => {
               </button>
 
               <ToastContainer />
-              <button
-                onClick={createMeeting}
-                className="mt-4 px-6 py-2 bg-red-600 text-white font-semibold rounded"
-              >
-                Continue with Google
+              <button onClick={handleGoogleLogin} className="btn-google-login">
+                Login with Google
               </button>
             </div>
           </form>
