@@ -10,6 +10,7 @@ import Holidays from "../AdminPages/Holidays";
 import ActivityLogs from "../Pages/ActivityLogs";
 import Createmeeting from "../components/Createmeeting";
 import Videocall from "../components/Videocall";
+import UsersDashboard from "../Userdashboard/UsersDashboard";
 
 export const router = createBrowserRouter([
   {
@@ -49,6 +50,17 @@ export const router = createBrowserRouter([
       {
         path: "google-meeting",
         element: <Createmeeting />,
+      },
+    ],
+  },
+  // User Dashboard
+  {
+    path: "/user/*",
+    element: <Main />,
+    children: [
+      {
+        path: "",
+        element: <UsersDashboard />,
       },
     ],
   },
