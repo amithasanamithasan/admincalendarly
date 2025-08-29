@@ -66,7 +66,7 @@ export default function AdminDashBoard() {
             to="google-meeting"
             className="block hover:bg-gray-700 p-2 rounded"
           >
-            Google Meeting
+            Zego Meeting
           </Link>
           <Link to="/room" className="block hover:bg-gray-700 p-2 rounded">
             Video Call

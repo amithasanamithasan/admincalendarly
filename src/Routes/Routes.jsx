@@ -11,6 +11,7 @@ import ActivityLogs from "../Pages/ActivityLogs";
 import Createmeeting from "../components/Createmeeting";
 import Videocall from "../components/Videocall";
 import UsersDashboard from "../Userdashboard/UsersDashboard";
+import UsersLink from "../Userdashboard/Pages/UsersLink";
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +62,10 @@ export const router = createBrowserRouter([
       {
         path: "",
         element: <UsersDashboard />,
+      },
+      {
+        path: "UsersLink",
+        element: <UsersLink />,
       },
     ],
   },

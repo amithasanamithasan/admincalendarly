@@ -12,7 +12,7 @@ export default function Bookings() {
     end_time: "",
     status: "pending",
     notes: "",
-    meeting_type: "google",
+    meeting_type: "none",
     meeting_link: "",
   });
 
@@ -73,7 +73,7 @@ export default function Bookings() {
           end_time: "",
           status: "pending",
           notes: "",
-          meeting_type: "google",
+          meeting_type: "none",
           meeting_link: "",
         });
         fetchBookings();
@@ -131,7 +131,7 @@ export default function Bookings() {
       {/* Booking Form */}
       <div className="flex justify-center mb-4">
         <form onSubmit={handleSubmit} className="grid gap-2 w-[400px]">
-          <select
+          {/* <select
             name="meeting_type"
             value={form.meeting_type}
             onChange={handleChange}
@@ -139,10 +139,21 @@ export default function Bookings() {
           >
             <option value="none">No Meeting Link</option>
             <option value="zoom">Zoom</option>
+            <option value="google">google</option>
+            <option value="zego">Video Call (Zego)</option>
+          </select> */}
+          <select
+            name="meeting_type"
+            value={form.meeting_type}
+            onChange={handleChange}
+            className="border p-2 rounded"
+          >
+            {console.log(form.meeting_type)}
+            <option value="none">No Meeting Link</option>
+            <option value="zoom">Zoom</option>
             <option value="google">Google Meet</option>
             <option value="zego">Video Call (Zego)</option>
           </select>
-
           <select
             name="user_id"
             value={form.user_id}
